@@ -11,13 +11,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import XLSX from 'xlsx';
 
 const App = () => {
-// States
+  // States
   const cols = 5;
   const rows = 10;
   const [gridData, setGridData] = useState(Array(rows).fill(Array(cols).fill('')));
   const [colTop, setCol] = useState(Array(cols).fill(''));
 
-// Async Storage code 
+  // Async Storage code 
   useEffect(() => {
     setCol(' ABCDE'.split(''));
     const loadData = async () => {
@@ -33,34 +33,24 @@ const App = () => {
     loadData();
   }, []);
 
-//download handle
-const handleDownload = () => {
-  const wb = XLSX.utils.book_new();
-  const wsData = gridData.map((row) => row.map((col) => col));
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-  const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
-  const pathToSave = `${RNFetchBlob.fs.dirs.DownloadDir}/gridData.xlsx`;
-  RNFetchBlob.fs
-    .writeFile(pathToSave, blob, 'binary')
-    .then(() => {
-      console.log('File downloaded successfully.');
-    })
-    .catch((error) => {
-      console.error('Error downloading file:', error);
-    });
-};
-function s2ab(s) {``
-  const buf = new ArrayBuffer(s.length);
-  const view = new Uint8Array(buf);
-  for (let i = 0; i !== s.length; ++i) {
-    view[i] = s.charCodeAt(i) & 0xff;
-  }
-  return buf;
-}
+  //download handle
+  const handleDownload = () => {
+    const wb = XLSX.utils.book_new();
+    const wsData = gridData.map((row) => row.map((col) => col));
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    const blob = XLSX.write(wb, { bookType: 'xlsx', type: 'blob' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gridData.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
 
-// saving state of evert elemenet
+  // saving state of evert elemenet
   const handleInputChange = (row, col, text) => {
     let newData = [...gridData];
     newData[row][col] = text;
@@ -68,7 +58,7 @@ function s2ab(s) {``
     AsyncStorage.setItem('gridDataGsclone', JSON.stringify(newData));
   };
 
-// Style
+  // Style
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -144,7 +134,7 @@ function s2ab(s) {``
               <Text style={styles.comp}>{rowIndex + 1}</Text>
               {row.map((col, colIndex) => (
                 <TextInput
-                  key={rowIndex*cols+colIndex}
+                  key={rowIndex * cols + colIndex}
                   style={styles.input}
                   value={gridData[rowIndex][colIndex]}
                   onChangeText={(text) => handleInputChange(rowIndex, colIndex, text)}
